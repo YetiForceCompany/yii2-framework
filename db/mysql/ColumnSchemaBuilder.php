@@ -51,6 +51,11 @@ class ColumnSchemaBuilder extends AbstractColumnSchemaBuilder
         return $this->comment !== null ? ' COMMENT ' . $this->db->quoteValue($this->comment) : '';
     }
 
+    protected function buildAutoIncrementString()
+    {
+        return $this->autoIncrement ? ' AUTO_INCREMENT' : '';
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -61,7 +66,7 @@ class ColumnSchemaBuilder extends AbstractColumnSchemaBuilder
                 $format = '{type}{length}{check}{comment}{append}{pos}';
                 break;
             case self::CATEGORY_NUMERIC:
-                $format = '{type}{length}{unsigned}{notnull}{unique}{default}{check}{comment}{append}{pos}';
+                $format = '{type}{length}{unsigned}{notnull}{unique}{default}{check}{autoIncrement}{comment}{append}{pos}';
                 break;
             default:
                 $format = '{type}{length}{notnull}{unique}{default}{check}{comment}{append}{pos}';
