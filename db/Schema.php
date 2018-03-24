@@ -722,7 +722,7 @@ abstract class Schema extends BaseObject
             return \App\Cache::get('tableSchema', $cacheKey);
         }
         $rawName = $this->getRawTableName($name);
-        if (!array_key_exists($type, $this->_tableMetadata[$rawName])) {
+        if (!isset($this->_tableMetadata[$rawName][$type])) {
             $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
         }
         \App\Cache::save('tableSchema', $cacheKey, $this->_tableMetadata[$rawName][$type], \App\Cache::LONG);
