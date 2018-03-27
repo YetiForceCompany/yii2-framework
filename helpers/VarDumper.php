@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2008 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
+
 namespace yii\helpers;
 
 /**
@@ -23,5 +24,4 @@ namespace yii\helpers;
  */
 class VarDumper extends BaseVarDumper
 {
-	
 }
