@@ -280,9 +280,13 @@ abstract class Schema extends BaseObject
      */
     public function refresh()
     {
+        /* @var $cache CacheInterface */
+        $cache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
+        if ($this->db->enableSchemaCache && $cache instanceof CacheInterface) {
+            TagDependency::invalidate($cache, $this->getCacheTag());
+        }
         $this->_tableNames = [];
         $this->_tableMetadata = [];
-        \App\Cache::clear();
     }
 
     /**
@@ -294,8 +298,14 @@ abstract class Schema extends BaseObject
      */
     public function refreshTableSchema($name)
     {
-        \App\Cache::delete('tableSchema', $name);
+        $rawName = $this->getRawTableName($name);
+        unset($this->_tableMetadata[$rawName]);
         $this->_tableNames = [];
+        /* @var $cache CacheInterface */
+        $cache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
+        if ($this->db->enableSchemaCache && $cache instanceof CacheInterface) {
+            $cache->delete($this->getCacheKey($rawName));
+        }
     }
 
     /**
@@ -376,7 +386,7 @@ abstract class Schema extends BaseObject
      */
     public function createSavepoint($name)
     {
-        $this->db->pdo->exec("SAVEPOINT $name");
+        $this->db->createCommand("SAVEPOINT $name")->execute();
     }
 
     /**
@@ -385,7 +395,7 @@ abstract class Schema extends BaseObject
      */
     public function releaseSavepoint($name)
     {
-        $this->db->pdo->exec("RELEASE SAVEPOINT $name");
+        $this->db->createCommand("RELEASE SAVEPOINT $name")->execute();
     }
 
     /**
@@ -394,7 +404,7 @@ abstract class Schema extends BaseObject
      */
     public function rollBackSavepoint($name)
     {
-        $this->db->pdo->exec("ROLLBACK TO SAVEPOINT $name");
+        $this->db->createCommand("ROLLBACK TO SAVEPOINT $name")->execute();
     }
 
     /**
@@ -407,7 +417,7 @@ abstract class Schema extends BaseObject
      */
     public function setTransactionIsolationLevel($level)
     {
-        $this->db->pdo->exec("SET TRANSACTION ISOLATION LEVEL $level");
+        $this->db->createCommand("SET TRANSACTION ISOLATION LEVEL $level")->execute();
     }
 
     /**
@@ -591,9 +601,11 @@ abstract class Schema extends BaseObject
     {
         if (strpos($name, '{{') !== false) {
             $name = preg_replace('/\\{\\{(.*?)\\}\\}/', '\1', $name);
+
             return str_replace('%', $this->db->tablePrefix, $name);
         }
-        return str_replace('#__', $this->db->tablePrefix, $name);
+
+        return $name;
     }
 
     /**
@@ -717,15 +729,22 @@ abstract class Schema extends BaseObject
      */
     protected function getTableMetadata($name, $type, $refresh)
     {
-        $cacheKey = "$type|$name";
-        if (\App\Cache::has('tableSchema', $cacheKey) && !$refresh) {
-            return \App\Cache::get('tableSchema', $cacheKey);
+        $cache = null;
+        if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
+            $schemaCache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
+            if ($schemaCache instanceof Cache) {
+                $cache = $schemaCache;
+            }
         }
         $rawName = $this->getRawTableName($name);
-        if (!isset($this->_tableMetadata[$rawName][$type]) || $refresh) {
-            $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
-			\App\Cache::save('tableSchema', $cacheKey, $this->_tableMetadata[$rawName][$type], \App\Cache::LONG);
+        if ($refresh || !isset($this->_tableMetadata[$rawName])) {
+            $this->loadTableMetadataFromCache($cache, $rawName);
         }
+        if (!array_key_exists($type, $this->_tableMetadata[$rawName])) {
+            $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
+            $this->saveTableMetadataToCache($cache, $rawName);
+        }
+
         return $this->_tableMetadata[$rawName][$type];
     }
 

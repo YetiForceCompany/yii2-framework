@@ -33,55 +33,50 @@ class ColumnSchemaBuilder extends BaseObject
     /**
      * @var string the column type definition such as INTEGER, VARCHAR, DATETIME, etc.
      */
-    public $type;
+    protected $type;
     /**
      * @var int|string|array column size or precision definition. This is what goes into the parenthesis after
      * the column type. This can be either a string, an integer or an array. If it is an array, the array values will
      * be joined into a string separated by comma.
      */
-    public $length;
+    protected $length;
     /**
      * @var bool|null whether the column is or not nullable. If this is `true`, a `NOT NULL` constraint will be added.
      * If this is `false`, a `NULL` constraint will be added.
      */
-    public $isNotNull;
+    protected $isNotNull;
     /**
      * @var bool whether the column values should be unique. If this is `true`, a `UNIQUE` constraint will be added.
      */
-    public $isUnique = false;
+    protected $isUnique = false;
     /**
      * @var string the `CHECK` constraint for the column.
      */
-    public $check;
+    protected $check;
     /**
      * @var mixed default value of the column.
      */
-    public $default;
+    protected $default;
     /**
      * @var mixed SQL string to be appended to column schema definition.
      * @since 2.0.9
      */
-    public $append;
+    protected $append;
     /**
      * @var bool whether the column values should be unsigned. If this is `true`, an `UNSIGNED` keyword will be added.
      * @since 2.0.7
      */
-    public $isUnsigned = false;
-    /**
-     * @var boolean whether the column values should be auto increment. If this is `true`, an `AUTO_INCREMENT` keyword will be added.
-     * YetiForce
-     */
-    public $autoIncrement = false;
+    protected $isUnsigned = false;
     /**
      * @var string the column after which this column will be added.
      * @since 2.0.8
      */
-    public $after;
+    protected $after;
     /**
      * @var bool whether this column is to be inserted at the beginning of the table.
      * @since 2.0.8
      */
-    public $isFirst;
+    protected $isFirst;
 
 
     /**
@@ -227,12 +222,6 @@ class ColumnSchemaBuilder extends BaseObject
         return $this;
     }
 
-    public function autoIncrement()
-    {
-        $this->autoIncrement = true;
-        return $this;
-    }
-
     /**
      * Adds an `AFTER` constraint to the column.
      * Note: MySQL, Oracle and Cubrid support only.
@@ -304,7 +293,7 @@ class ColumnSchemaBuilder extends BaseObject
      * Builds the length/precision part of the column.
      * @return string
      */
-    public function buildLengthString()
+    protected function buildLengthString()
     {
         if ($this->length === null || $this->length === []) {
             return '';
@@ -442,11 +431,6 @@ class ColumnSchemaBuilder extends BaseObject
         return '';
     }
 
-    protected function buildAutoIncrementString()
-    {
-        return '';
-    }
-
     /**
      * Returns the complete column definition from input format.
      * @param string $format the format of the definition.
@@ -462,7 +446,6 @@ class ColumnSchemaBuilder extends BaseObject
             '{notnull}' => $this->buildNotNullString(),
             '{unique}' => $this->buildUniqueString(),
             '{default}' => $this->buildDefaultString(),
-            '{autoIncrement}' => $this->buildAutoIncrementString(),
             '{check}' => $this->buildCheckString(),
             '{comment}' => $this->buildCommentString(),
             '{pos}' => $this->isFirst ? $this->buildFirstString() : $this->buildAfterString(),
