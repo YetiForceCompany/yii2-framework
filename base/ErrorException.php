@@ -1,13 +1,11 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\base;
-
-use Yii;
 
 /**
  * ErrorException represents a PHP error.
@@ -38,7 +36,7 @@ class ErrorException extends \ErrorException
      * @param int $severity [optional]
      * @param string $filename [optional]
      * @param int $lineno [optional]
-     * @param \Throwable|\Exception $previous [optional]
+     * @param \Throwable|null $previous [optional]
      */
     public function __construct($message = '', $code = 0, $severity = 1, $filename = __FILE__, $lineno = __LINE__, $previous = null)
     {
@@ -54,7 +52,7 @@ class ErrorException extends \ErrorException
                     $frame['function'] = 'unknown';
                 }
 
-                // Xdebug < 2.1.1: http://bugs.xdebug.org/view.php?id=695
+                // Xdebug < 2.1.1: https://bugs.xdebug.org/view.php?id=695
                 if (!isset($frame['type']) || $frame['type'] === 'static') {
                     $frame['type'] = '::';
                 } elseif ($frame['type'] === 'dynamic') {
@@ -126,15 +124,14 @@ class ErrorException extends \ErrorException
             E_NOTICE => 'PHP Notice',
             E_PARSE => 'PHP Parse Error',
             E_RECOVERABLE_ERROR => 'PHP Recoverable Error',
-            E_STRICT => 'PHP Strict Warning',
             E_USER_DEPRECATED => 'PHP User Deprecated Warning',
             E_USER_ERROR => 'PHP User Error',
             E_USER_NOTICE => 'PHP User Notice',
             E_USER_WARNING => 'PHP User Warning',
             E_WARNING => 'PHP Warning',
             self::E_HHVM_FATAL_ERROR => 'HHVM Fatal Error',
-        ];
+        ] + (PHP_VERSION_ID < 80400 ? [E_STRICT => 'PHP Strict Warning'] : []);
 
-        return isset($names[$this->getCode()]) ? $names[$this->getCode()] : 'Error';
+        return $names[$this->getCode()] ?? 'Error';
     }
 }

@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\base;
@@ -46,13 +46,21 @@ use yii\validators\Validator;
  * 'Username must contain only word characters.', ], 'email' => [ 'Email address is invalid.', ] ] ``` .
  * @property-read array $firstErrors The first errors. The array keys are the attribute names, and the array
  * values are the corresponding error messages. An empty array will be returned if there is no error.
- * @property-read ArrayIterator $iterator An iterator for traversing the items in the list.
  * @property string $scenario The scenario that this model is in. Defaults to [[SCENARIO_DEFAULT]].
  * @property-read ArrayObject|\yii\validators\Validator[] $validators All the validators declared in the
  * model.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
+ *
+ * @phpstan-property array<string, mixed> $attributes
+ * @psalm-property array<string, mixed> $attributes
+ *
+ * @phpstan-property-read array<string, string[]> $errors
+ * @psalm-property-read array<string, string[]> $errors
+ *
+ * @phpstan-property-read array<string, string> $firstErrors
+ * @psalm-property-read array<string, string> $firstErrors
  */
 class Model extends Component implements StaticInstanceInterface, IteratorAggregate, ArrayAccess, Arrayable
 {
@@ -152,6 +160,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array validation rules
      * @see scenarios()
+     *
+     * @phpstan-return array<int|string, mixed>[]
+     * @psalm-return array<int|string, mixed>[]
      */
     public function rules()
     {
@@ -182,6 +193,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * are being validated by the validation rules that apply to the scenario.
      *
      * @return array a list of scenarios and the corresponding active attributes.
+     *
+     * @phpstan-return array<string, string[]>
+     * @psalm-return array<string, string[]>
      */
     public function scenarios()
     {
@@ -260,9 +274,11 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the list of attribute names.
+     *
      * By default, this method returns all public non-static properties of the class.
      * You may override this method to change the default behavior.
-     * @return array list of attribute names.
+     *
+     * @return string[] list of attribute names.
      */
     public function attributes()
     {
@@ -292,6 +308,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array attribute labels (name => label)
      * @see generateAttributeLabel()
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function attributeLabels()
     {
@@ -312,6 +331,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @return array attribute hints (name => hint)
      * @since 2.0.4
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function attributeHints()
     {
@@ -579,6 +601,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      *
      * @see getFirstErrors()
      * @see getFirstError()
+     *
+     * @phpstan-return array<string, string[]>
+     * @psalm-return array<string, string[]>
      */
     public function getErrors($attribute = null)
     {
@@ -595,6 +620,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * values are the corresponding error messages. An empty array will be returned if there is no error.
      * @see getErrors()
      * @see getFirstError()
+     *
+     * @phpstan-return array<string, string>
+     * @psalm-return array<string, string>
      */
     public function getFirstErrors()
     {
@@ -632,6 +660,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * @see getErrors()
      * @see getFirstErrors()
      * @since 2.0.14
+     *
+     * @phpstan-return string[]
+     * @psalm-return string[]
      */
     public function getErrorSummary($showAllErrors)
     {
@@ -707,6 +738,9 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
      * If it is an array, only the attributes in the array will be returned.
      * @param array $except list of attributes whose value should NOT be returned.
      * @return array attribute values (name => value).
+     *
+     * @phpstan-return array<string, mixed>
+     * @psalm-return array<string, mixed>
      */
     public function getAttributes($names = null, $except = [])
     {
@@ -786,6 +820,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
     /**
      * Returns the attribute names that are safe to be massively assigned in the current scenario.
+     *
      * @return string[] safe attribute names
      */
     public function safeAttributes()
@@ -797,7 +832,11 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
         }
         $attributes = [];
         foreach ($scenarios[$scenario] as $attribute) {
-            if (strncmp($attribute, '!', 1) !== 0 && !in_array('!' . $attribute, $scenarios[$scenario])) {
+            if (
+                $attribute !== ''
+                && strncmp($attribute, '!', 1) !== 0
+                && !in_array('!' . $attribute, $scenarios[$scenario])
+            ) {
                 $attributes[] = $attribute;
             }
         }
@@ -893,7 +932,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     public static function loadMultiple($models, $data, $formName = null)
     {
         if ($formName === null) {
-            /* @var $first Model|false */
+            /** @var self|false $first */
             $first = reset($models);
             if ($first === false) {
                 return false;
@@ -903,7 +942,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
 
         $success = false;
         foreach ($models as $i => $model) {
-            /* @var $model Model */
+            /** @var self $model */
             if ($formName == '') {
                 if (!empty($data[$i]) && $model->load($data[$i], '')) {
                     $success = true;
@@ -930,7 +969,7 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     public static function validateMultiple($models, $attributeNames = null)
     {
         $valid = true;
-        /* @var $model Model */
+        /** @var self $model */
         foreach ($models as $model) {
             $valid = $model->validate($attributeNames) && $valid;
         }
@@ -1051,5 +1090,16 @@ class Model extends Component implements StaticInstanceInterface, IteratorAggreg
     public function offsetUnset($offset)
     {
         $this->$offset = null;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __clone()
+    {
+        parent::__clone();
+
+        $this->_errors = null;
+        $this->_validators = null;
     }
 }

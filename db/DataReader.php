@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
@@ -79,7 +79,7 @@ class DataReader extends \yii\base\BaseObject implements \Iterator, \Countable
      * in the result set. If using the column name, be aware that the name
      * should match the case of the column, as returned by the driver.
      * @param mixed $value Name of the PHP variable to which the column will be bound.
-     * @param int $dataType Data type of the parameter
+     * @param int|null $dataType Data type of the parameter
      * @see https://www.php.net/manual/en/function.PDOStatement-bindColumn.php
      */
     public function bindColumn($column, &$value, $dataType = null)
@@ -105,7 +105,7 @@ class DataReader extends \yii\base\BaseObject implements \Iterator, \Countable
 
     /**
      * Advances the reader to the next row in a result set.
-     * @return array the current row, false if no more row available
+     * @return array|false the current row, false if no more row available
      */
     public function read()
     {

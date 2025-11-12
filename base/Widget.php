@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\base;
@@ -60,6 +60,11 @@ class Widget extends Component implements ViewContextInterface
      */
     public static $stack = [];
 
+    /**
+     * @var string[] used widget classes that have been resolved to their actual class name.
+     */
+    private static $_resolvedClasses = [];
+
 
     /**
      * Initializes the object.
@@ -85,9 +90,10 @@ class Widget extends Component implements ViewContextInterface
     public static function begin($config = [])
     {
         $config['class'] = get_called_class();
-        /* @var $widget Widget */
+        /** @var self $widget */
         $widget = Yii::createObject($config);
         self::$stack[] = $widget;
+        self::$_resolvedClasses[get_called_class()] = get_class($widget);
 
         return $widget;
     }
@@ -104,13 +110,10 @@ class Widget extends Component implements ViewContextInterface
         if (!empty(self::$stack)) {
             $widget = array_pop(self::$stack);
 
-            $calledClass = get_called_class();
-            if (Yii::$container->has($calledClass) && isset(Yii::$container->getDefinitions()[$calledClass]['class'])) {
-                $calledClass = Yii::$container->getDefinitions()[$calledClass]['class'];
-            }
+            $calledClass = self::$_resolvedClasses[get_called_class()] ?? get_called_class();
 
             if (get_class($widget) === $calledClass) {
-                /* @var $widget Widget */
+                /** @var self $widget */
                 if ($widget->beforeRun()) {
                     $result = $widget->run();
                     $result = $widget->afterRun($result);
@@ -131,15 +134,15 @@ class Widget extends Component implements ViewContextInterface
      * The widget rendering result is returned by this method.
      * @param array $config name-value pairs that will be used to initialize the object properties
      * @return string the rendering result of the widget.
-     * @throws \Exception
+     * @throws \Throwable
      */
     public static function widget($config = [])
     {
         ob_start();
         ob_implicit_flush(false);
         try {
-            /* @var $widget Widget */
             $config['class'] = get_called_class();
+            /** @var self $widget */
             $widget = Yii::createObject($config);
             $out = '';
             if ($widget->beforeRun()) {
@@ -147,6 +150,12 @@ class Widget extends Component implements ViewContextInterface
                 $out = $widget->afterRun($result);
             }
         } catch (\Exception $e) {
+            // close the output buffer opened above if it has not been closed already
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            throw $e;
+        } catch (\Throwable $e) {
             // close the output buffer opened above if it has not been closed already
             if (ob_get_level() > 0) {
                 ob_end_clean();
@@ -211,7 +220,8 @@ class Widget extends Component implements ViewContextInterface
 
     /**
      * Executes the widget.
-     * @return string the result of widget execution to be outputted.
+     *
+     * @return string|void the rendering result may be directly "echoed" or returned as a string
      */
     public function run()
     {

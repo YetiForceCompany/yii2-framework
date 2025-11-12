@@ -1,13 +1,12 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\di;
 
-use Exception;
 use Yii;
 use yii\base\InvalidConfigException;
 
@@ -111,19 +110,32 @@ class Instance
      * You may specify a reference in terms of a component ID or an Instance object.
      * Starting from version 2.0.2, you may also pass in a configuration array for creating the object.
      * If the "class" value is not specified in the configuration array, it will use the value of `$type`.
-     * @param string $type the class/interface name to be checked. If null, type check will not be performed.
-     * @param ServiceLocator|Container $container the container. This will be passed to [[get()]].
+     * @param string|null $type the class/interface name to be checked. If null, type check will not be performed.
+     * @param ServiceLocator|Container|null $container the container. This will be passed to [[get()]].
      * @return object the object referenced by the Instance, or `$reference` itself if it is an object.
      * @throws InvalidConfigException if the reference is invalid
+     *
+     * @template T of object
+     * @psalm-param class-string<T>|null $type
+     * @phpstan-param class-string<T>|null $type
+     * @psalm-return ($type is null ? object : T)
+     * @phpstan-return ($type is null ? object : T)
      */
     public static function ensure($reference, $type = null, $container = null)
     {
         if (is_array($reference)) {
-            $class = isset($reference['class']) ? $reference['class'] : $type;
             if (!$container instanceof Container) {
                 $container = Yii::$container;
             }
-            unset($reference['class']);
+            if (isset($reference['__class'])) {
+                $class = $reference['__class'];
+                unset($reference['__class'], $type['class']);
+            } elseif (isset($reference['class'])) {
+                $class = $reference['class'];
+                unset($reference['class']);
+            } else {
+                $class = $type;
+            }
             $component = $container->get($class, [], $reference);
             if ($type === null || $component instanceof $type) {
                 return $component;
@@ -159,7 +171,7 @@ class Instance
 
     /**
      * Returns the actual object referenced by this Instance object.
-     * @param ServiceLocator|Container $container the container used to locate the referenced object.
+     * @param ServiceLocator|Container|null $container the container used to locate the referenced object.
      * If null, the method will first try `Yii::$app` then `Yii::$container`.
      * @return object the actual object referenced by this Instance object.
      */
@@ -174,7 +186,12 @@ class Instance
             }
 
             return Yii::$container->get($this->id);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            if ($this->optional) {
+                return null;
+            }
+            throw $e;
+        } catch (\Throwable $e) {
             if ($this->optional) {
                 return null;
             }
