@@ -1,14 +1,14 @@
 {
-  "name": "yetiforce/yii2",
-  "description": "Yii PHP Framework Version 2 by YetiForceCRM",
-  "keywords": [
-    "YetiForceYii",
-    "yii2",
-    "framework"
-  ],
-  "homepage": "https://github.com/YetiForceCompany/yii2-framework",
-  "type": "library",
-  "license": "BSD-3-Clause",
+    "name": "yetiforce/yii2",
+    "description": "Yii PHP Framework Version 2 by YetiForceCRM",
+    "keywords": [
+        "YetiForceYii",
+        "yii2",
+        "framework"
+    ],
+    "homepage": "https://github.com/YetiForceCompany/yii2-framework",
+    "type": "library",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Qiang Xue",
@@ -57,7 +57,7 @@
         }
     ],
     "require": {
-        "php": ">=7.3.0",
+        "php": ">=7.4.0",
         "ext-mbstring": "*",
         "ext-ctype": "*",
         "lib-pcre": "*"
