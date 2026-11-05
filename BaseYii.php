@@ -12,7 +12,6 @@ use yii\base\InvalidConfigException;
 use yii\base\UnknownClassException;
 use yii\di\Container;
 use yii\log\Logger;
-use yii\web\IdentityInterface;
 
 /**
  * Gets the application start timestamp.
@@ -57,8 +56,6 @@ defined('YII_ENABLE_ERROR_HANDLER') or define('YII_ENABLE_ERROR_HANDLER', true);
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
- *
- * @template TUserIdentity of IdentityInterface
  */
 class BaseYii
 {
@@ -71,7 +68,7 @@ class BaseYii
      */
     public static $classMap = [];
     /**
-     * @var \yii\console\Application|\yii\web\Application<TUserIdentity>|null the application instance
+     * @var \yii\console\Application|\yii\web\Application the application instance
      */
     public static $app;
     /**

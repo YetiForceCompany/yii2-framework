@@ -14,7 +14,6 @@ use yii\helpers\ArrayHelper;
 use yii\helpers\StringHelper;
 use yii\helpers\VarDumper;
 use yii\web\Request;
-use yii\web\User;
 
 /**
  * Target is the base class for all log target classes.
